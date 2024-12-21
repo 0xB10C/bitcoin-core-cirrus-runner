@@ -230,10 +230,7 @@ in
         DANGER_CI_ON_HOST_CACHE_FOLDERS = "true";
         # Set the extra docker build arguments to cache the build steps.
         # This is a Bitcoin Core CI configuration option.
-        # TODO: this has been renamed during development and the option
-        # without DANGER_ can be removed at some point.
-        # https://github.com/bitcoin/bitcoin/pull/31545#discussion_r1893769621
-        DOCKER_BUILD_CACHE_HOST_DIR = "/cache/docker/ci-imgs";
+        # See https://github.com/bitcoin/bitcoin/pull/31545
         DANGER_DOCKER_BUILD_CACHE_HOST_DIR = "/cache/docker/ci-imgs";
       };
     };
