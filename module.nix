@@ -15,10 +15,10 @@ let
   # Rootless docker doesn't work on a tmpfs (apt install fails with invalid cross-device link)
   # So the VMs get a raw disk that is attached to the VM. The disk image resides on a tmpfs on
   # the host. A size of 16 GB should be plenty the current VM.
-  TMPFS_QEMU_DOCKER_IMAGE_SIZE = 16; # in GB
+  TMPFS_QEMU_DOCKER_IMAGE_SIZE = 4; # in GB
 
   # The upper layer of the overlayfs of each VM is stored on a tmpfs.
-  TMPFS_OVERLAYFS_UPPER_SIZE = 5; # in GB
+  TMPFS_OVERLAYFS_UPPER_SIZE = 1; # in GB
 
   cfg = config.services.cirrus-ephemeral-vm-runner;
   vmList =
@@ -92,64 +92,11 @@ let
 
       UPPER="/var/lib/cirrusvm/${vm.name}/overlay/tmp/upper"
 
-      echo "STEP copy-new-ccache-entries for ${vm.name}"
-      SOURCE="$UPPER/ccache"
-      DEST="${cacheDir}/ccache"
+      echo "STEP copy-new-cache-entries for ${vm.name}"
+      SOURCE="$UPPER"
+      DEST="${cacheDir}"
       if [ -d "$SOURCE" ]; then
-        echo "removing lock and stats files from $SOURCE"
-        rm -rf $SOURCE/lock
-        rm -rf $SOURCE/*/stats
-        rm -rf $SOURCE/*/*/stats
-        echo "copying non-existing ccache files from $SOURCE to $DEST"
-        cp -n -R $SOURCE/* $DEST/ --verbose
-      fi
-
-      echo "STEP copy-new-built-depends for ${vm.name}"
-      SOURCE="$UPPER/depends/built"
-      DEST="${cacheDir}/depends/built"
-      if [ -d "$SOURCE" ]; then
-        echo "copying newly built depends from $SOURCE to $DEST"
-        cp -n -R $SOURCE/* $DEST/ --verbose
-      fi
-
-      echo "STEP copy-new-depends-sources for ${vm.name}"
-      SOURCE="$UPPER/depends/sources/"
-      DEST="${cacheDir}/depends/sources/"
-      if [ -d "$SOURCE" ]; then
-        echo "copying new depends sources from $SOURCE to $DEST"
-        cp -n -R $SOURCE/* $DEST/ --verbose
-      fi
-
-      echo "STEP copy-new-prev_releases for ${vm.name}"
-      SOURCE="$UPPER/prev_releases/"
-      DEST="${cacheDir}/prev_releases/"
-      if [ -d "$SOURCE" ]; then
-        echo "copying new prev_releases files from $SOURCE to $DEST"
-        cp -n -R $SOURCE/* $DEST/ --verbose
-      fi
-
-      echo "STEP move-docker-ci-image-cache for ${vm.name}"
-      SOURCE="$UPPER/docker/ci-imgs"
-      DEST="${cacheDir}/docker/ci-imgs"
-      if [ -d "$SOURCE" ]; then
-        for path in "$SOURCE"/*; do
-          image=$(basename "$path")
-          if [ -d "$SOURCE/$image" ]; then
-            if [ -e "$SOURCE/$image/index.json" ]; then
-              echo "removing existing cache for: $image"
-              rm -rf "$DEST/$image" --verbose
-              echo "moving docker files from $SOURCE/$image to $DEST"
-              mv "$SOURCE/$image" "$DEST" --verbose
-            fi
-          fi
-        done
-      fi
-
-      echo "STEP copy-docker-base-images for ${vm.name}"
-      SOURCE="$UPPER/docker/base-imgs"
-      DEST="${cacheDir}/docker/base-imgs"
-      if [ -d "$SOURCE" ]; then
-        echo "copying new docker base-imgs from $SOURCE to $DEST"
+        echo "copying non-existing cache files from $SOURCE to $DEST"
         cp -n -R $SOURCE/* $DEST/ --verbose
       fi
 
@@ -273,13 +220,13 @@ in
     systemd.mounts =
       [
         # mount a tmpfs for the cache
-        # TODO: doc why this is 25 GB
+        # TODO: doc why this is 5 GB
         {
           enable = true;
           where = "/cache";
           type = "tmpfs";
           what = "tmpfs";
-          options = "defaults,mode=0700,size=25G,uid=8333,gid=8333";
+          options = "defaults,mode=0700,size=5G,uid=8333,gid=8333";
           wantedBy = [ "multi-user.target" ];
         }
       ]
@@ -503,14 +450,6 @@ in
     systemd.tmpfiles.rules = [
       "d '/var/lib/cirrusvm'                    700 'cirrus-vm' 'cirrus-vm' - -"
       "d '${cacheDir}'                          700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/depends'                  700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/depends/built'            700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/depends/sources'          700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/ccache'                   700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/prev_releases'            700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/docker'                   700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/docker/base-imgs'         700 'cirrus-vm' 'cirrus-vm' - -"
-      "d '${cacheDir}/docker/ci-imgs'           700 'cirrus-vm' 'cirrus-vm' - -"
       "f '${cacheDir}/.this-file-should-exist'  700 'cirrus-vm' 'cirrus-vm' - -"
       # set 700 on all existing assets
       "Z '${cacheDir}/*'                        700 'cirrus-vm' 'cirrus-vm' - -"
