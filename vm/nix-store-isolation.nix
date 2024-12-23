@@ -107,9 +107,6 @@ in
       system.build.nixStoreImage = nixStoreImages."${cfg.nixStoreFilesystemType}";
 
       virtualisation = {
-
-        sharedDirectories = mkForce { };
-
         qemu.drives = [
           {
             file = config.system.build.nixStoreImage;
