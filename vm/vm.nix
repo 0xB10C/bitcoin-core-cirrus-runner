@@ -24,6 +24,7 @@ in
     (modulesPath + "/profiles/headless.nix")
     (modulesPath + "/profiles/qemu-guest.nix")
     ./cirrus-runner.nix
+    ./nix-store-isolation.nix
   ];
 
   virtualisation = {
@@ -39,12 +40,6 @@ in
     # we overwrite with mkForce here to make sure no other directores are shared
     # By default, NixOS includes the shared and xchg directories.
     sharedDirectories = pkgs.lib.mkForce {
-      # Mount the NixOS store as read-only
-      nix-store = {
-        source = builtins.storeDir;
-        target = "/nix/.ro-store";
-        securityModel = "none";
-      };
       # A share for the cirrus worker config
       "etc-cirrus" = {
         source = "/var/lib/cirrusvm/${name}/config";
@@ -62,18 +57,28 @@ in
     # use tmpfs for /
     diskImage = null;
 
-    qemu.drives = [
-      {
-        name = "docker";
-        file = constants.DOCKER_RAW_DISK_LOCATION name;
-        driveExtraOpts = {
-          format = "raw";
-          aio = "io_uring";
-          werror = "report";
-          # id, if, index are set by NixOS: https://github.com/NixOS/nixpkgs/blob/394571358ce82dff7411395829aa6a3aad45b907/nixos/modules/virtualisation/qemu-vm.nix#L82-L87
-        };
-      }
-    ];
+    # Don't mount the host's nix-store as it might have tools that make it easier
+    # to escape the VM and other more "private" information that might better be
+    # isolated from the VMs. The VMs don't need it, so no point in giving them
+    # access to it.
+    mountHostNixStore = false;
+    qemu = {
+      drives = [
+        {
+          name = "docker";
+          file = constants.DOCKER_RAW_DISK_LOCATION name;
+          driveExtraOpts = {
+            format = "raw";
+            aio = "io_uring";
+            werror = "report";
+            # id, if, index are set by NixOS: https://github.com/NixOS/nixpkgs/blob/394571358ce82dff7411395829aa6a3aad45b907/nixos/modules/virtualisation/qemu-vm.nix#L82-L87
+          };
+        }
+      ];
+      # build a nix-store erofs image for each VM and mount it. This is using
+      # the nix-store-isolation.nix helper.
+      isolation.nixStoreFilesystemType = "erofs";
+    };
 
     # A raw disk is used for CIRRUS_WORKER_WORKDIR/docker which is a file on a
     # tmpfs. This is a workaround to docker not working directly on a tmpfs.
