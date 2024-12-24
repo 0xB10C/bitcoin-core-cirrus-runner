@@ -85,8 +85,8 @@ in
     fileSystems."${constants.CIRRUS_WORKER_WORKDIR}/docker" = {
       autoFormat = true;
       # This name was retrieved from the VM via `lsblk`. It might change when
-      # adding more disks. Generally, the first disk is vda, the second vdb, ..
-      device = "/dev/vda";
+      # adding more disks. Generally, the first disk is vdb, the second vdb, ..
+      device = "/dev/vdb";
       fsType = "ext4";
       noCheck = true;
     };
@@ -173,7 +173,7 @@ in
           "8.8.8.8"
           "1.1.1.1"
         ];
-        # Have docker store everything on /dev/vda, which is backed by a raw
+        # Have docker store everything on /dev/vdb, which is backed by a raw
         # disk file on a tmpfs on the host.
         data-root = "${constants.CIRRUS_WORKER_WORKDIR}/docker/";
         features = {
