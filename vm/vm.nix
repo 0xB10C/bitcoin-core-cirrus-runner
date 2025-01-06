@@ -129,7 +129,6 @@ in
   documentation.info.enable = false;
   nix.enable = false;
 
-  services.udev.enable = false;
   services.lvm.enable = false;
   security.sudo.enable = false;
   # hand picked from "/profiles/perlless.nix"
