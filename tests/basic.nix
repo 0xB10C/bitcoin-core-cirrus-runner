@@ -2,6 +2,9 @@
 
 let
 
+  PROMETHEUS_EXPORTER_PORT_SMALL = 9500;
+  PROMETHEUS_EXPORTER_PORT_MEDIUM = 9501;
+  
 in
 {
   name = "basic";
@@ -48,18 +51,19 @@ in
 
     # ssh port of cirrus-vm0small
     machine.wait_for_open_port(2000, timeout=60)
-    machine.wait_for_open_port(9500, timeout=60)
+    machine.wait_for_open_port(${toString PROMETHEUS_EXPORTER_PORT_SMALL}, timeout=60)
 
     # ssh port of cirrus-vm1medium
     machine.wait_for_open_port(2001, timeout=60)
-    machine.wait_for_open_port(9501, timeout=60)
+    machine.wait_for_open_port(${toString PROMETHEUS_EXPORTER_PORT_MEDIUM}, timeout=60)
 
     machine.succeed("systemctl start grafana.service")
     # TOOD: don't hardcode grafana port
     # machine.wait_for_open_port(1234, timeout=15)
 
-    # wait until the node exporter on vm0small is online 
-    machine.wait_until_succeeds("${pkgs.curl}/bin/curl http://127.0.0.1:9500", timeout=10)
+    # wait until the node exporter on the VMs is online
+    machine.wait_until_succeeds("${pkgs.curl}/bin/curl http://127.0.0.1:${toString PROMETHEUS_EXPORTER_PORT_SMALL}", timeout=60)
+    machine.wait_until_succeeds("${pkgs.curl}/bin/curl http://127.0.0.1:${toString PROMETHEUS_EXPORTER_PORT_MEDIUM}", timeout=60)
 
   '';
 }
