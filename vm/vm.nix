@@ -193,9 +193,6 @@ in
         enable = true;
         enabledCollectors = [ "systemd" ];
         port = 9002;
-        # Otherwise the collector complains about the /nix/store being duplicate
-        # We don't need the VM side of it, as it's mounted from the host.
-        extraFlags = [ "--collector.filesystem.ignored-mount-points='^/nix/store$'" ];
       };
     };
   };
