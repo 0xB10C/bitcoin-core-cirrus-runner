@@ -168,12 +168,12 @@ in
       enable = true;
       setSocketVariable = true;
       daemon.settings = {
-        ipv6 = false;
+        ipv6 = true;
         dns = [
           "8.8.8.8"
-          "1.1.1.1"
           "2606:4700:4700::1111"
         ];
+        fixed-cidr-v6 = "1111:1111::/112";
         # Have docker store everything on /dev/vdb, which is backed by a raw
         # disk file on a tmpfs on the host.
         data-root = "${constants.CIRRUS_WORKER_WORKDIR}/docker/";
