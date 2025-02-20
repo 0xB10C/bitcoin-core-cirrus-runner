@@ -171,6 +171,7 @@ in
         dns = [
           "8.8.8.8"
           "1.1.1.1"
+          "2606:4700:4700::1111"
         ];
         # Have docker store everything on /dev/vdb, which is backed by a raw
         # disk file on a tmpfs on the host.
