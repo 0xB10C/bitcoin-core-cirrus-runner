@@ -25,6 +25,7 @@ in
     (modulesPath + "/profiles/qemu-guest.nix")
     ./cirrus-runner.nix
     ./nix-store-isolation.nix
+    ./overlay.nix
   ];
 
   virtualisation = {
